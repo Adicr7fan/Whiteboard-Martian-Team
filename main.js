@@ -1,10 +1,10 @@
 // Getting the canvas
 const board = document.getElementById('canvas');
-board.height = window.innerHeight ;
-board.width = window.innerWidth ;
+board.height = window.innerHeight - 10;
+board.width = window.innerWidth - 20;
 const ctx = board.getContext('2d');
 ctx.fillStyle = "white";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+
 ctx.lineJoin = "round";
 ctx.lineCap = "round";
 let active = "";
@@ -12,8 +12,16 @@ let color = "";
 let working = false;
 let x_initial, y_initial;
 let flag = 0;
-const undoStack = [];
-const redoStack = [];
+var undoStack = [];
+var redoStack = [];
+var index=-1
+var r_index=-1
+var pen_style
+var x
+var x1,y1,x2,y2
+let painting=false
+var button=0
+
 // Pencil Input........
 const pencil = document.querySelector('.slider-pencil');
 // Thickness of pencil
@@ -23,29 +31,12 @@ let pencilWidth = pencil.value;
 // Updating the thickness of the pencil on changing pencil input slider
 pencil.oninput = () => {
     pencilWidth = pencil.value
-    if (active === 'marker') {
+    if (x!== 'eraser') {
         ctx.lineWidth = pencil.value;
     }
 }
-// const theme = document.querySelector("#theme")
-
-// theme.addEventListener('click', () => {
-//         ctx.fillStyle = "Black";
-//         ctx.fillRect(0, 0, canvas.width, canvas.height);
-//         theme.classList.toggle("fa-sun");
-//         theme.classList.toggle("fa-moon");
-
-//         if (theme.classList.contains("fa-moon")) {
-//             console.log(theme);
-//             ctx.fillStyle = "White";
-//             ctx.fillRect(0, 0, canvas.width, canvas.height);
-//             // theme.classList.toggle("fa-moon")
-//         }
-//         // document.body.classList.toggle("fa-sun");
-//     })
 
 
-//theme
 const theme = document.querySelector("#theme")
 
 theme.addEventListener('click', () => {
@@ -67,9 +58,6 @@ theme.addEventListener('click', () => {
         }
         // document.body.classList.toggle("fa-sun");
     })
-
-
-
     // Eraser Input.......
 const eraser = document.querySelector('.slider-eraser');
 // Thickness of eraser
@@ -79,7 +67,7 @@ let eraserWidth = eraser.value;
 // Updating the thickness of the eraser on changing eraser input silder
 eraser.oninput = () => {
     eraserWidth = eraser.value;
-    if (active === 'eraser') {
+    if (x === 'eraser') {
         ctx.lineWidth = eraser.value;
     }
 }
@@ -88,150 +76,292 @@ eraser.oninput = () => {
 document.querySelector('.dropdown-content').addEventListener('click', (e) => {
     console.log(e.target.parentElement.getAttribute('value'));
     ctx.strokeStyle = e.target.parentElement.getAttribute('value');
+    pen_style=ctx.strokeStyle
 })
+function start(e){
+    painting=true;
+//    e.draw
 
-function updatecolor(e) {
-    const col = document.querySelector('.updatecolor').value;
-    ctx.fillStyle=col;
-    ctx.strokeStyle =col;
+const DOMRect = board.getBoundingClientRect();
+    x1 = e.clientX;
+     y1= e.clientY ;
+    
 }
-// Handling event when pencil is clicked
-document.querySelector('.fa-marker').addEventListener('click', () => {
-    // If Eraser is active
-    if (active !== "" && active !== "marker") {
-        working = false;
-        document.querySelector('.active').classList.remove('active');
-        // ctx.strokeStyle = 'black';
-        active = "";
-    }
-    ctx.lineWidth = pencilWidth;
-    // Toggling pencil button
-    working = !working;
-    color = 'not-white';
 
-    // If pencil is turned on
-    if (working === true) {
-        document.querySelector('.fa-marker').classList.add('active');
-        active = 'marker';
-    }
-    // If pencil is turned off
-    else {
-        document.querySelector('.fa-marker').classList.remove('active');
-        active = "";
-    }
-});
-
-
-// Handling event when eraser is clicked
-document.querySelector('.fa-eraser').addEventListener('click', () => {
-    // Pencil is active
-    if (active !== "" && active !== 'eraser') {
-        working = false;
-        document.querySelector('.active').classList.remove('active');
-        active = "";
-    }
+function draw(e){
+  
+    if(!painting)return;
+    x2=e.clientX
+    y2=e.clientY
 
     
+    if(x==="random" || x==="eraser"){
 
-    ctx.lineWidth = eraserWidth;
-    // Toggling eraser button
-    working = !working;
-    color = 'white';
-
-    // If eraser is turned on
-    if (working === true) {
-        document.querySelector('.fa-eraser').classList.add('active');
-        active = 'eraser';
-        ctx.strokeStyle = 'white';
-    } else {
-        document.querySelector('.fa-eraser').classList.remove('active');
-        active = "";
-        ctx.strokeStyle = 'black';
-    }
-});
-
-// Drawing on the screen
-
-// Setting initial values when the event mousedown is occured on the board
-document.getElementById('canvas').addEventListener('mousedown', (e) => {
-    ctx.beginPath();
+     ctx.lineCap="round"
     const DOMRect = board.getBoundingClientRect();
-    x_initial = e.clientX - DOMRect.left;
-    y_initial = e.clientY - DOMRect.top;
-    const x = x_initial;
-    const y = y_initial;
-    flag = 1;
+    ctx.moveTo(x1,y1)
 
-    const point = {
-        x,
-        y,
-        color: ctx.strokeStyle,
-        width: ctx.lineWidth,
-        type: 'begin'
-    };
+    ctx.lineTo(e.clientX- DOMRect.left,e.clientY- DOMRect.top)
+    ctx.stroke()
+    x1=e.clientX- DOMRect.left
+    y1=e.clientY- DOMRect.top
 
-    // Push the properties of initial point into the undo stack
-    undoStack.push(point);
-});
+}
 
-// Capturing the mousemove event on board
-document.getElementById('canvas').addEventListener('mousemove', (e) => {
-    if (flag === 1 && working === true) {
-        if (color === 'white')
-            ctx.strokeStyle = 'white';
+}
 
-        const DOMRect = board.getBoundingClientRect();
-        const x = e.clientX - DOMRect.left;
-        const y = e.clientY - DOMRect.top;
 
-        // Creating line from initial to current position
-        ctx.moveTo(x_initial, y_initial);
-        ctx.lineTo(x, y);
-        ctx.stroke();
 
-        // Setting previous position equal to the current position
-        x_initial = x;
-        y_initial = y;
+function stop(e,y){
+    painting=false;
+    const DOMRect = board.getBoundingClientRect();
+    ctx.lineWidth = pencil.value;
+  
+    x2=e.clientX
+    y2=e.clientY
+    ctx.beginPath();
+    if(y==="square"){
+       
+   ctx.moveTo(x1,y1)
+   var a = Math.min(x2,  x1),
+   b = Math.min(y2,y1),
+   c = Math.abs(x2-x1),
+   d = Math.abs(y2-y1);
+    ctx.strokeRect(a,b,c,d);
+}
+ else if(y==="triangle"){
+   
+    ctx.moveTo(x1,y1);
+ctx.lineTo(x2,y2);
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(x1,y1);
+ctx.lineTo(x1,y2);
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(x1,y2);
+ctx.lineTo(x2,y2);
+ctx.stroke();
+ctx.beginPath()
+}
 
-        const point = {
-            x,
-            y,
-            color: ctx.strokeStyle,
-            width: ctx.lineWidth,
-            type: 'end'
-        }
 
-        // Pushing the properties of the current position into the undoStack
-        undoStack.push(point);
+   
+   else if(y==="circle"){
+        ctx.beginPath();
+        ctx.lineWidth = pencil.value;
+      
+        ctx.lineCap="round"
+    
+        var x_center=(x2+x1)/2;
+        var y_center=(y2+y1)/2;
+       
+        const r=Math.pow(Math.pow(x2-x1,2)+Math.pow(y2-y1,2),0.5)/2;
+        ctx.moveTo(x_center+r,y_center);
+         ctx.arc(x_center,y_center,r,0,Math.PI*2)
+         ctx.stroke()
+       
     }
-});
+   else if(y==="line"){
+        ctx.moveTo(x1,y1)
+        ctx.lineTo(x2,y2)
+        ctx.stroke()
+    }
+  else  if(y==="heart"){
+        var x = x1;
+        var y = y1;
+        var width = Math.abs(x2-x1) ;
+        var height = Math.abs(y2-y1);
+      
+        ctx.save();
+        ctx.beginPath();
+        var topCurveHeight = height * 0.3;
+        ctx.moveTo(x, y + topCurveHeight);
+        // top left curve
+        ctx.bezierCurveTo(
+          x, y, 
+          x - width / 2, y, 
+          x - width / 2, y + topCurveHeight
+        );
+      
+        // bottom left curve
+        ctx.bezierCurveTo(
+          x - width / 2, y + (height + topCurveHeight) / 2, 
+          x, y + (height + topCurveHeight) / 2, 
+          x, y + height
+        );
+      
+        // bottom right curve
+        ctx.bezierCurveTo(
+          x, y + (height + topCurveHeight) / 2, 
+          x + width / 2, y + (height + topCurveHeight) / 2, 
+          x + width / 2, y + topCurveHeight
+        );
+      
+        // top right curve
+        ctx.bezierCurveTo(
+          x + width / 2, y, 
+          x, y, 
+          x, y + topCurveHeight
+        );
+      
+        ctx.stroke()
+      
+    }
+    // let t=button
+    // while(t>0){
+    //     undoStack.pop()
+    //     t-=1
+    // }
+      if( e.type!=="mouseout"){
+          //undoStack.pop()
+      
+      undoStack.push(ctx.getImageData(0,0,board.width,board.height))
+      index+=1
+      //let t=button
+  
+     
+      console.log(undoStack.length)
+      }
+    
+}
 
-// Capturing the event of mouseup
-document.getElementById('canvas').addEventListener('mouseup', (e) => {
-    flag = 0;
-});
+function triangles(){
+    
+    button+=1
+    console.log("trbut"+button)
+    x="triangle"
+    ctx.strokeStyle=pen_style
+    ctx.lineWidth = pencil.width;
+    board.addEventListener("mousedown",start)
+board.addEventListener("mouseup",(e)=>stop(e,x))
+
+}
+function square(){
+    button+=1
+    console.log("sqbut"+button)
+
+    x="square"
+    ctx.strokeStyle=pen_style
+    ctx.lineWidth = pencil.width;
+
+board.addEventListener("mousedown",start)
+
+board.addEventListener("mouseup",(e)=>stop(e,x))
+// draw a red line
+}
+function circle(){
+    button+=1
+    console.log("crsbut"+button)
+    x="circle"
+    ctx.strokeStyle=pen_style
+    ctx.lineWidth = pencil.width;
+    board.addEventListener("mousedown",start)
+    board.addEventListener("mouseup",(e)=>stop(e,x))
+   
+   
+}
+function line(){
+    button+=1
+    x="line"
+    console.log("linbut"+button)
+    ctx.strokeStyle=pen_style
+    ctx.lineWidth = pencil.width;
+    board.addEventListener("mousedown",start)
+   
+    board.addEventListener("mouseup",(e)=>stop(e,x))
+}
+function random(){
+    button+=1
+    console.log("rbut"+button)
+    x="random"
+    ctx.strokeStyle=pen_style
+    ctx.lineWidth = pencil.width;
+    board.addEventListener("mousedown",start)
+    board.addEventListener("mousemove",draw) 
+    board.addEventListener("mouseup",(e)=>stop(e,x))
+   
+}
+function eraser1(e){
+    x="eraser"
+    ctx.lineWidth =  eraser.value;
+    ctx.strokeStyle="white"
+    board.addEventListener("mousedown",start)
+    board.addEventListener("mousemove",draw) 
+    board.addEventListener("mouseup",(e)=>stop(e,x))
+   
+}
+
+    function drawHeart(e) {
+        button+=1
+    console.log("rbut"+button)
+    x="heart"
+    ctx.strokeStyle=pen_style
+    ctx.lineWidth = pencil.width;
+    board.addEventListener("mousedown",start)
+  //  board.addEventListener("mousemove",draw) 
+    board.addEventListener("mouseup",(e)=>stop(e,x))
+
+        
+}
+
+document.querySelector('.dropdown1-content .fa-square').addEventListener('click',square)
+
+document.querySelector(' .fa-circle').addEventListener('click',circle)
+document.querySelector(' .fa-play').addEventListener('click',triangles)
 
 
 
-// Clear All
-// document.querySelector('.fa-trash').addEventListener('click', () => {
-//     // Clearing the canvas 
-//     ctx.clearRect(0, 0, board.width, board.height);
-//     // Clearing the image
-//     if (document.querySelector('img'))
-//         document.querySelector('img').remove();
-//     // Clearing the sticky note
-//     if (document.querySelector('.sticky-note')) {
-//         document.querySelector('.sticky-note').style.display = 'none';
-//         document.querySelector('.fa-sticky-note').classList.remove('active');
-//     }
-//     // document.querySelector('.active').classList.remove('active');
-//     // active = "";
-//     // working = false;
-// });
+document.querySelector('.fa-marker').addEventListener('click',random)
+document.querySelector('.fa-eraser').addEventListener('click',eraser1 );
+
+
+
+//document.querySelector('.fa-eraser').addEventListener('click',eraser1)
+document.querySelector('.fa-heart').addEventListener('click',drawHeart)
+document.querySelector('.line').addEventListener('click',line)
+
+// document.querySelector('.fa-eraser').addEventListener('click',random)
+function clear_cvs(){
+    ctx.clearRect(0,0,board.width,board.height)
+    undoStack=[]
+    index=-1
+}
+function undo(){
+   if(index>0){
+       index-=1
+      let d= undoStack.pop()
+      redoStack.push(d)
+       ctx.putImageData(undoStack[index],0,0)
+       r_index+=1
+   }
+   else {
+       clear_cvs()
+   }
+}
+
+function redo(){
+    console.log("yess")
+    if(r_index>=0){
+        index+=1
+       
+       console.log("redo me hu")
+       ctx.putImageData(redoStack[r_index],0,0)
+
+        let d=redoStack.pop()
+        undoStack.push(d)
+        console.log(redoStack[r_index])
+        r_index-=1
+    }
+   
+}
+document.querySelector(".fa-undo").addEventListener("click",undo)
+document.querySelector(".fa-redo").addEventListener("click",redo)
+
+document.querySelector('.fa-trash').addEventListener('click', clear_cvs);
+
 
 // Sticky Note
-
 const stickyNote = document.querySelector('.sticky-note');
 const note = document.querySelector('.note-text');
 
@@ -304,75 +434,3 @@ document.querySelector('.fa-download').addEventListener('click', () => {
     el.click();
 });
 
-//clear
-function clear_cvs(){
-    ctx.clearRect(0,0,board.width,board.height)
-    undoStack=[]
-    index=-1
-}
-
-document.querySelector('.fa-trash').addEventListener('click', clear_cvs);
-
-// Undo..................
-let interval;
-
-// Starting undo
-document.querySelector('.undo').addEventListener('mousedown', () => {
-    if (undoStack.length > 0) {
-        interval = setInterval(() => {
-            if (undoStack.length === 0)
-                return;
-            // Pop Out the last acrion from undoStack and push it into the redostack
-            redoStack.push(undoStack.pop());
-            reDraw();
-        }, 0)
-    }
-});
-
-// Ending undo
-document.querySelector('.undo').addEventListener('mouseup', () => {
-    clearInterval(interval);
-});
-
-// Redo................
-
-// Starting redo
-document.querySelector('.redo').addEventListener('mousedown', () => {
-    if (redoStack.length > 0) {
-        interval = setInterval(() => {
-            if (redoStack.length === 0)
-                return;
-            // Pop Out the last acrion from undoStack and push it into the redostack
-            undoStack.push(redoStack.pop());
-            reDraw();
-        }, 0)
-    }
-});
-
-// Ending redo
-document.querySelector('.redo').addEventListener('mouseup', () => {
-    clearInterval(interval);
-});
-
-// Undo Redo Logic
-// ReDraw the entire text after the last action has been popped out
-function reDraw() {
-    // For the first action
-    if (undoStack.length === 0)
-        return;
-    ctx.clearRect(0, 0, board.width, board.height);
-    undoStack.forEach(el => {
-        const point = el;
-
-        ctx.lineWidth = point.width;
-        ctx.color = point.color;
-
-        if (point.type === 'begin') {
-            ctx.beginPath();
-            ctx.moveTo(point.x, point.y);
-        } else if (point.type === 'end') {
-            ctx.lineTo(point.x, point.y);
-            ctx.stroke();
-        }
-    })
-}

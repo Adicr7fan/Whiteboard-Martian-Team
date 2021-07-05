@@ -11,10 +11,10 @@
 
 <body>
     <div class="box">
-        <canvas  id="canvas"></canvas>
+        <canvas  id="canvas" class="light"></canvas>
 
         <header id="main-header">
-            <div class="container light">
+            <div class="container ">
                 <ul class="menu">
                     <li class="menu-options marker dropdownBtn" style="position: relative;">
                         <i class="fas fa-marker"></i>
@@ -66,7 +66,29 @@
                     <li class="menu-options note">
                         <span class="tooltiptext">Add Note</span>
                         <i class="fas fa-sticky-note"></i>
+
                     </li>
+                    <li class="menu-options shapes ">
+                        <div class="dropdown" >
+                        <span class='fas fa-shapes' style='font-size:24px'></span>
+                        <span class="tooltiptext">Shapes</span>
+                        <div class="dropdown1-content">
+                            <!-- <p>Shapes</p> -->
+                                
+                                    <span class="fas fa-square " id="sqr"></span>
+                                   
+                                
+                                    <span class="fas fa-circle" id="crcl"></span>
+                                    
+                                    <span class="fas fa-play" style="transform:rotate(30deg)" id="triangle"></span>
+                                    <span class="fas fa-heart"  id="heart"></span>
+                                    
+                                    
+                                    <span class="fas fa-minus" id="sqr"></span>
+                                    
+                         </div>
+                        </div>
+                </li>
                     <li class="menu-options download">
                         <span class="tooltiptext">Download</span>
                         <i class="fas fa-download"></i>

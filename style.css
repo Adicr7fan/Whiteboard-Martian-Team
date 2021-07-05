@@ -10,6 +10,13 @@
 
 /* Utilities */
 
+.light{
+    background-color: rgb(255, 255, 255);
+}
+.dark1{
+    background-color: rgb(29, 27, 31);
+}
+
 ul {
     list-style: none;
 }
@@ -24,8 +31,9 @@ body {
 
 .fas {
     font-size: 1.5rem;
-    color: #BBBBBB;
+    color: #000000;
     transition: 0.2s;
+    transform: translateY(5px);
 }
 
 .fas:hover {
@@ -61,15 +69,6 @@ body {
 }
 
 
-.light{
-    background-color: #7baa23;
-    
-}
-
-.dark1{
-    background-color: black;
-}
-
 
 
 .box{
@@ -83,7 +82,7 @@ body {
     flex-direction: row;
     width: 700px;
     height: 70px;
-    background-color: whitesmoke;
+    background-color: rgba(182, 180, 180, 0.438);
     /* align-items: center; */
     border-radius: 10px;
     box-shadow: 0 8px 6px -6px;
@@ -155,7 +154,27 @@ ul {
     border: 1px solid rgba( 255, 255, 255, 0.18)*/
 }
 
-
+.dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdown1-content {
+    display: none;
+    position: absolute;
+    background-color:transparent;
+    min-width: 160px;
+    /* box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); */
+    padding: 12px 16px;
+    z-index: 1;
+  }
+  .line{
+      font-size:28px;
+      font-weight: 1000px;
+  }
+  .dropdown:hover .dropdown1-content {
+    display: block;
+  }
 /* .dropdownBtn {} */
 
 .dropdownBtn:hover .dropdown-content {
@@ -194,6 +213,7 @@ ul {
 
 
 /* Sticky Note */
+
 
 .sticky-note {
     position: absolute;
